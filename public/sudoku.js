@@ -463,10 +463,41 @@ Grid.prototype.show_selected = function (data) {
   ).style.outline = `2px dashed ${data.color}8e`;
 };
 
+function createNewRoom(difficulty = "hard") {
+  fetch("https://sugoku.herokuapp.com/board?difficulty=" + difficulty)
+    .then((response) => {
+      return response.json();
+    })
+    .then((data) => {
+      console.log(data);
+      let board = data["board"];
+      if (board) {
+        let processedBoard = board
+          .map((row) =>
+            row
+              .map((num) => {
+                if (num === 0) {
+                  return ".";
+                } else {
+                  return num + "";
+                }
+              })
+              .join("")
+          )
+          .join("");
+        socket.emit("create new room", processedBoard);
+      }
+    })
+    .catch((err) => {
+      console.err(err);
+    });
+}
+
 document
   .getElementById("create_new_room")
   .addEventListener("click", function () {
-    socket.emit("create new room", document.getElementById("sdk_input").value);
+    createNewRoom(document.getElementById("select_difficulty").value);
+    //socket.emit("create new room", document.getElementById("sdk_input").value);
   });
 
 document.getElementById("join_room").addEventListener("click", function () {
