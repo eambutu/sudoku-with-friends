@@ -24,6 +24,8 @@ app.get("/room/:room_id", (req, res) => {
 var ROOMS = new Map();
 var PLAYER_ROOMS = new Map();
 var PLAYER_COLORS = ["#e74c3c", "#f1c40f", "#9b59b6", "#3498db", "#1abc9c"];
+const DEFAULT_BOARD =
+  ".....5.622....7..95..2.......34.6..8...7.9.....8312.56.1.6..8...458..92.9.7.21...";
 
 function Player(id, color, room) {
   this.id = id;
@@ -108,6 +110,22 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("update room", (sdk) => {
+    let roomId = PLAYER_ROOMS.get(socket.id);
+    if (roomId) {
+      let board = new Board(sdk, roomId);
+      board.addPlayer(socket.id);
+      if (board.cells) {
+        ROOMS.set(roomId, board);
+        socket.emit("set up board", ROOMS.get(roomId));
+      } else {
+        socket.emit("cant parse sdk");
+      }
+    } else {
+      socket.emit("couldn't find board");
+    }
+  });
+
   socket.on("join room", (id) => {
     if (PLAYER_ROOMS.get(socket.id)) {
       ROOMS.get(PLAYER_ROOMS.get(socket.id)).removePlayer(socket.id);
@@ -126,7 +144,17 @@ io.on("connection", (socket) => {
         socket.emit("room is full");
       }
     } else {
-      socket.emit("room not found");
+      // room not found
+      console.log("room not found");
+      socket.join(id);
+      let board = new Board(DEFAULT_BOARD, id);
+      board.addPlayer(socket.id);
+      if (board.cells) {
+        ROOMS.set(id, board);
+        socket.emit("set up board", ROOMS.get(id));
+      } else {
+        socket.emit("cant parse sdk");
+      }
     }
   });
 

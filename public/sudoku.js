@@ -268,12 +268,7 @@ function Grid(board) {
   }
 
   if (!GAME_OVER && this.digits_left[0] == 81 && !this.conflicts_present()) {
-    clearInterval(TIMER);
-    let finished_checkmark = document.createElement("img");
-    finished_checkmark.src = "/green-checkmark.svg";
-    finished_checkmark.id = "finished-icon";
-    document.getElementById("board").appendChild(finished_checkmark);
-    GAME_OVER = true;
+    endGame();
   }
 }
 
@@ -407,12 +402,7 @@ Grid.prototype.update_cell = function (data) {
         this.digits_left[0] == 81 &&
         !this.conflicts_present()
       ) {
-        clearInterval(TIMER);
-        let finished_checkmark = document.createElement("img");
-        finished_checkmark.src = "/green-checkmark.svg";
-        finished_checkmark.id = "finished-icon";
-        document.getElementById("board").appendChild(finished_checkmark);
-        GAME_OVER = true;
+        endGame();
       }
     }
   }
@@ -463,7 +453,7 @@ Grid.prototype.show_selected = function (data) {
   ).style.outline = `2px dashed ${data.color}8e`;
 };
 
-function createNewRoom(difficulty = "hard") {
+function createNewRoom(difficulty = "hard", update = false) {
   fetch("https://sugoku.herokuapp.com/board?difficulty=" + difficulty)
     .then((response) => {
       return response.json();
@@ -485,7 +475,7 @@ function createNewRoom(difficulty = "hard") {
               .join("")
           )
           .join("");
-        socket.emit("create new room", processedBoard);
+        socket.emit(update ? "update room" : "create new room", processedBoard);
       }
     })
     .catch((err) => {
@@ -493,11 +483,25 @@ function createNewRoom(difficulty = "hard") {
     });
 }
 
+function endGame() {
+  clearInterval(TIMER);
+  let finished_checkmark = document.createElement("img");
+  finished_checkmark.src = "/green-checkmark.svg";
+  finished_checkmark.id = "finished-icon";
+  document.getElementById("board").appendChild(finished_checkmark);
+  GAME_OVER = true;
+}
+
 document
   .getElementById("create_new_room")
   .addEventListener("click", function () {
     createNewRoom(document.getElementById("select_difficulty").value);
-    //socket.emit("create new room", document.getElementById("sdk_input").value);
+  });
+
+document
+  .getElementById("restart-button")
+  .addEventListener("click", function () {
+    createNewRoom(document.getElementById("restart-difficulty").value, true);
   });
 
 document.getElementById("join_room").addEventListener("click", function () {
@@ -510,9 +514,12 @@ if (window.location.pathname.startsWith("/room/")) {
 }
 
 socket.on("set up board", (board) => {
+  GAME_OVER = false;
+  /*
   if (window.location.pathname.slice(6) != board.id.toString()) {
     window.history.pushState({}, null, `/room/${board.id}`);
   }
+  */
 
   // Transition
   document.body.style.opacity = 0;
@@ -523,9 +530,11 @@ socket.on("set up board", (board) => {
       el = document.getElementById("lobby").lastChild;
     }
     document.getElementById("lobby-container").style.display = "none";
+    /*
     let room_id = document.createElement("p");
     room_id.innerHTML = "Room ID: " + board.id;
     document.getElementById("game-id").appendChild(room_id);
+    */
 
     document.getElementById("game").style.display = "flex";
     document.getElementById("timer").style.display = "block";

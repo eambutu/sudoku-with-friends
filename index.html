@@ -50,7 +50,7 @@
     <div id="game">
       <div id="empty-spacer"></div>
       <div role="grid" id="board"></div>
-      <div class="su-app__control">
+      <div class="su-app__control" id="rightbar">
         <div class="su-keyboard">
           <div class="su-keyboard__split">
             <button
@@ -218,6 +218,14 @@
               class="su-keyboard__delete"
             ></div>
           </div>
+        </div>
+        <div>
+          <button id="restart-button">Generate new board</button>
+          <select name="difficulty" id="restart-difficulty">
+            <option value="hard">Hard</option>
+            <option value="medium">Medium</option>
+            <option value="easy">Easy</option>
+          </select>
         </div>
       </div>
     </div>
