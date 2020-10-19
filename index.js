@@ -10,7 +10,13 @@ var helmet = require("helmet");
 var port = process.env.PORT || 3000;
 
 app.use(express.static(path.join(__dirname, "public")));
-app.use(helmet());
+app.use(
+  helmet.contentSecurityPolicy({
+    directives: {
+      "frame-ancestors": ["*"],
+    },
+  })
+);
 app.use(compression()); //Compress all routes
 
 app.get("/", (req, res) => {
